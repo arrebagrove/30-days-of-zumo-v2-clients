@@ -52,6 +52,8 @@
      * Called after the entry button is clicked to clean up the old HTML and add our HTML
      */
     function initializeApp() {
+        console.log('client token = ', client.currentUser);
+
         $('#wrapper').empty();
 
         // Replace the wrapper with the main content from the original Todo App
