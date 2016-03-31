@@ -104,6 +104,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\AzureMobileApp.cs" />
     <Compile Include="Services\AzureMobileAppException.cs" />
+    <Compile Include="Services\TodoItem.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">

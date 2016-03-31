@@ -7,6 +7,7 @@ namespace UWP.Services
     {
         private static string AppService = "https://30-days-of-zumo-v2.azurewebsites.net";
         private static MobileServiceClient client = null;
+        private static IMobileServiceTable<TodoItem> taskTable = null;
 
         /// <summary>
         /// Singleton for accessing the Azure App Service Mobile App client
@@ -19,6 +20,19 @@ namespace UWP.Services
                 client = new MobileServiceClient(AppService);
             }
             return client;
+        }
+
+        /// <summary>
+        /// Singleton for accessign the Azure App Service Mobile App Table for TodoItem.
+        /// </summary>
+        /// <returns></returns>
+        public static IMobileServiceTable<TodoItem> GetTaskTable()
+        {
+            if (taskTable == null)
+            {
+                taskTable = GetClient().GetTable<TodoItem>();
+            }
+            return taskTable;
         }
 
         /// <summary>
