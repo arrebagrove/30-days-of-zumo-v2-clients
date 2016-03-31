@@ -68,13 +68,23 @@
             <ListView x:Name="TaskItems">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Orientation="Horizontal">
-                            <CheckBox x:Name="Completed"
-                                      IsChecked="{Binding Complete, Mode=TwoWay}"
-                                      Checked="TaskCompleted_Checked"
-                                      Content="{Binding Text}"
-                                      VerticalAlignment="Center"/>
-                        </StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <CheckBox Grid.Column="0"
+                                IsChecked="{Binding Complete, Mode=TwoWay}"
+                                VerticalAlignment="Center"/>
+                            <TextBox Grid.Column="1"
+                                Text="{Binding Text, Mode=TwoWay}"
+                                VerticalAlignment="Center"/>
+                            <SymbolIcon Grid.Column="2"
+                                Symbol="Delete"
+                                VerticalAlignment="Center"/>
+                        </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
