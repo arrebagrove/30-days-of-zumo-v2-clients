@@ -7,5 +7,7 @@ namespace Shellmonger.TaskList.Services
         Task LoginAsync();
 
         Task LogoutAsync();
+
+        void Trace(string className, string message);
     }
 }

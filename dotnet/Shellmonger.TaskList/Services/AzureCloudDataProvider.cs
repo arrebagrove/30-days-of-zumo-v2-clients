@@ -79,5 +79,10 @@ namespace Shellmonger.TaskList.Services
                 throw new CloudAuthenticationException("Logout Failed", exception);
             }
         }
+
+        public void Trace(string className, string message)
+        {
+            System.Diagnostics.Debug.WriteLine(String.Format("TRACE:{0}:{1}", className, message));
+        }
     }
 }

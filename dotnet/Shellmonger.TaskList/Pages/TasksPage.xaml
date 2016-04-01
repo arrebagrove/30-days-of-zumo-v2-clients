@@ -42,7 +42,7 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel x:Name="AppBarLeftIcons" Grid.Column="0" Orientation="Horizontal">
-                <SymbolIcon Symbol="Add" Style="{StaticResource TitleIcon}"/>
+                <SymbolIcon x:Name="AddTask" Symbol="Add" Style="{StaticResource TitleIcon}" Tapped="AddTaskIcon_Click"/>
             </StackPanel>
             <StackPanel x:Name="AppBarRightIcons" Grid.Column="1" Orientation="Horizontal">
                 <SymbolIcon x:Name="RefreshIcon"

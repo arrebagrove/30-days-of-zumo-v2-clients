@@ -21,6 +21,8 @@ namespace Shellmonger.TaskList.Pages
         /// </summary>
         private async void HangUp_Click(object sender, TappedRoutedEventArgs e)
         {
+            if (!LogoutIcon.IsTapEnabled) return;
+            App.CloudProvider.Trace("TasksPage", "HangUp_Click");
             // Change the color of the button to gray and disable it
             var color = LogoutIcon.Foreground;
             LogoutIcon.Foreground = new SolidColorBrush(Colors.Gray);
@@ -53,6 +55,8 @@ namespace Shellmonger.TaskList.Pages
 
         private async void RefreshIcon_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
+            if (!RefreshIcon.IsTapEnabled) return;
+            App.CloudProvider.Trace("TasksPage", "RefreshIcon_Click");
             RefreshIconRotation.Begin();
             RefreshIcon.IsTapEnabled = false;
 
@@ -61,6 +65,23 @@ namespace Shellmonger.TaskList.Pages
 
             RefreshIcon.IsTapEnabled = true;
             RefreshIconRotation.Stop();
+        }
+
+        private async void AddTaskIcon_Click(object sender, TappedRoutedEventArgs e)
+        {
+            if (!AddTask.IsTapEnabled) return;
+            App.CloudProvider.Trace("PeoplePage", "AddFriendIcon_Click");
+            // Disable the Add Friend Icon
+            var color = AddTask.Foreground;
+            AddTask.Foreground = new SolidColorBrush(Colors.Gray);
+            AddTask.IsTapEnabled = false;
+
+            // TODO: Processing
+            await Task.Delay(2000);
+
+            // Enable the Add Friend Icon
+            AddTask.Foreground = color;
+            AddTask.IsTapEnabled = true;
         }
     }
 }
