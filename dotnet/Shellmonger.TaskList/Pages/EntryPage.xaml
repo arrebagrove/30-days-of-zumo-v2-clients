@@ -9,18 +9,25 @@
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
         <TextBlock Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="0" Style="{StaticResource EntryTitle}">
             Blog Tasks List
         </TextBlock>
+
+        <StackPanel x:Name="EntryButton" Grid.Column="1" Grid.Row="1" Style="{StaticResource EntryButtonPanel}" Tapped="EntryButton_Clicked">
+            <TextBlock Style="{StaticResource EntryButton}">
+                Enter The App
+            </TextBlock>
+        </StackPanel>
+
     </Grid>
 </Page>
