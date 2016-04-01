@@ -31,7 +31,7 @@
             <TextBlock Grid.Column="0" Style="{StaticResource Title}">Tasks</TextBlock>
             <StackPanel x:Name="TitleBarIcons" Grid.Column="1" Orientation="Horizontal">
                 <SymbolIcon Symbol="People" Style="{StaticResource TitleIcon}" Tapped="People_Click"/>
-                <SymbolIcon Symbol="HangUp" Style="{StaticResource TitleIcon}" Tapped="HangUp_Click"/>
+                <SymbolIcon  x:Name="LogoutIcon" Symbol="HangUp" Style="{StaticResource TitleIcon}" Tapped="HangUp_Click"/>
             </StackPanel>
         </Grid>
 

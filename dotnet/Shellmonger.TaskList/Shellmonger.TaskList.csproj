@@ -108,6 +108,9 @@
       <DependentUpon>TasksPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\AzureCloudDataProvider.cs" />
+    <Compile Include="Services\CloudAuthenticationException.cs" />
+    <Compile Include="Services\ICloudDataProvider.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
