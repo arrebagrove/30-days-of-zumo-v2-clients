@@ -35,6 +35,31 @@
             </StackPanel>
         </Grid>
 
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Auto">
+            <ListView x:Name="TaskListView" Margin="5,5,0,0" SelectionMode="None" IsItemClickEnabled="False">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="48"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <CheckBox x:Name="taskComplete" Grid.Column="0" IsChecked="{Binding Completed}" Margin="10,5" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="taskTitle" Grid.Column="1" Text="{Binding Title}" VerticalAlignment="Center"/>
+                            <SymbolIcon x:Name="taskDelete" Grid.Column="2" Foreground="Red" Symbol="Delete"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </ScrollViewer>
+
         <Grid x:Name="AppBar" Background="Teal" Grid.Row="2" Padding="8,4">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -55,7 +80,11 @@
                     </SymbolIcon.RenderTransform>
                 </SymbolIcon>
             </StackPanel>
+
+
         </Grid>
 
     </Grid>
+
+
 </Page>

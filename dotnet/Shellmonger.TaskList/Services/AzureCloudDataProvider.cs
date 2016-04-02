@@ -11,10 +11,10 @@ namespace Shellmonger.TaskList.Services
     /// Concrete implementation of the ICloudDataProvider
     /// that uses Azure Mobile Apps
     /// </summary>
-    public class AzureCloudDataProvider : ICloudDataProvider
+    public class AzureCloudDataProvider
     {
-        static string AppBaseUri = "https://30-days-of-zumo-v2.azurewebsites.net";
-        static MobileServiceClient _client = null;
+        private static string AppBaseUri = "https://30-days-of-zumo-v2.azurewebsites.net";
+        private static IMobileServiceClient _client = null;
 
         /// <summary>
         /// Debug statement output for current user
@@ -37,13 +37,13 @@ namespace Shellmonger.TaskList.Services
         /// Singleton Pattern - create a new MobileServiceClient
         /// </summary>
         /// <returns></returns>
-        private static MobileServiceClient GetClient()
+        private static IMobileServiceClient GetClient()
         {
-            if (_client == null)
+            if (AzureCloudDataProvider._client == null)
             {
-                _client = new MobileServiceClient(AppBaseUri);
+                AzureCloudDataProvider._client = new MobileServiceClient(AppBaseUri);
             }
-            return _client;
+            return AzureCloudDataProvider._client;
         }
 
         /// <summary>
@@ -80,9 +80,25 @@ namespace Shellmonger.TaskList.Services
             }
         }
 
+        /// <summary>
+        /// Provides a default trace facility
+        /// </summary>
+        /// <param name="className">The class doing the tracing</param>
+        /// <param name="message">The message</param>
         public void Trace(string className, string message)
         {
             System.Diagnostics.Debug.WriteLine(String.Format("TRACE:{0}:{1}", className, message));
+        }
+
+        /// <summary>
+        /// Returns a reference to a mobile service table
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public IMobileServiceTable<T> GetTable<T>()
+        {
+            var client = AzureCloudDataProvider.GetClient();
+            return client.GetTable<T>();
         }
     }
 }
