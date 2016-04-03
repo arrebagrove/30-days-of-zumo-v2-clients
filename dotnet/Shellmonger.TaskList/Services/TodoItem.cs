@@ -12,5 +12,7 @@ namespace Shellmonger.TaskList.Services
         [JsonProperty("complete")]
         public bool Completed { get; set; }
 
+        [JsonProperty("shared")]
+        public bool Shared { get; set; }
     }
 }

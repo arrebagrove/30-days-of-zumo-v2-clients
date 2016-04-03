@@ -1,6 +1,7 @@
 ﻿<Page x:Class="Shellmonger.TaskList.Pages.TasksPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:converters="using:Shellmonger.TaskList.Converters"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:local="using:Shellmonger.TaskList.Pages"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -15,6 +16,9 @@
                              Storyboard.TargetProperty="(UIElement.RenderTransform).(CompositeTransform.Rotation)"
                              To="360" />
         </Storyboard>
+
+        <converters:SharedColorConverter x:Key="SharedColorConverter" />
+        <converters:DeleteColorConverter x:Key="DeleteColorConverter" />
     </Page.Resources>
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
@@ -73,17 +77,26 @@
                                       VerticalAlignment="Center"
                                       Checked="taskComplete_Changed"
                                       IsChecked="{Binding Completed}"
+                                      IsEnabled="{Binding Shared}"
                                       Unchecked="taskComplete_Changed" />
                             <TextBox x:Name="taskTitle"
                                      Grid.Column="1"
+                                     IsEnabled="{Binding Shared}"
                                      KeyDown="taskTitle_KeyDown"
                                      Style="{StaticResource TaskBox}"
                                      Text="{Binding Title}" />
-                            <SymbolIcon x:Name="taskDelete"
-                                        Grid.Column="2"
-                                        Foreground="Red"
-                                        Symbol="Delete"
-                                        Tapped="taskDelete_Tapped" />
+                            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                <SymbolIcon x:Name="taskShared"
+                                            Foreground="{Binding Shared,
+                                                                 Converter={StaticResource SharedColorConverter}}"
+                                            Symbol="Contact" />
+                                <SymbolIcon x:Name="taskDelete"
+                                            Grid.Column="2"
+                                            Foreground="{Binding Shared,
+                                                                 Converter={StaticResource DeleteColorConverter}}"
+                                            Symbol="Delete"
+                                            Tapped="taskDelete_Tapped" />
+                            </StackPanel>
                         </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>
