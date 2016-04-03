@@ -4,6 +4,7 @@ using System;
 using System.Threading.Tasks;
 using Windows.UI;
 using Windows.UI.Popups;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
@@ -35,7 +36,7 @@ namespace Shellmonger.TaskList.Pages
         private async void HangUp_Click(object sender, TappedRoutedEventArgs e)
         {
             if (!LogoutIcon.IsTapEnabled) return;
-            App.CloudProvider.Trace("TasksPage", "HangUp_Click");
+
             // Change the color of the button to gray and disable it
             var color = LogoutIcon.Foreground;
             LogoutIcon.Foreground = new SolidColorBrush(Colors.Gray);
@@ -66,22 +67,28 @@ namespace Shellmonger.TaskList.Pages
             Frame.Navigate(typeof(PeoplePage));
         }
 
-        private async void RefreshIcon_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        /// <summary>
+        /// Event Handler: Clicked on Refresh Icon
+        /// </summary>
+        private async void RefreshIcon_Click(object sender, RoutedEventArgs e)
         {
             if (!RefreshIcon.IsTapEnabled) return;
-            App.CloudProvider.Trace("TasksPage", "RefreshIcon_Click");
             await RefreshTasks();
         }
 
+        /// <summary>
+        /// Event Handler: Clicked on Add Task Icon
+        /// </summary>
         private async void AddTaskIcon_Click(object sender, TappedRoutedEventArgs e)
         {
             if (!AddTask.IsTapEnabled) return;
-            App.CloudProvider.Trace("PeoplePage", "AddFriendIcon_Click");
+
             // Disable the Add Task Icon
             var color = AddTask.Foreground;
             AddTask.Foreground = new SolidColorBrush(Colors.Gray);
             AddTask.IsTapEnabled = false;
 
+            // Build the contents of the dialog box
             var stackPanel = new StackPanel();
             var taskBox = new TextBox
             {
@@ -91,6 +98,7 @@ namespace Shellmonger.TaskList.Pages
             };
             stackPanel.Children.Add(taskBox);
 
+            // Create the dialog box
             var dialog = new ContentDialog
             {
                 Title = "Add New Task",
@@ -98,13 +106,23 @@ namespace Shellmonger.TaskList.Pages
                 SecondaryButtonText = "Cancel"
             };
             dialog.Content = stackPanel;
+
+            // Show the dialog box and handle the response
             var result = await dialog.ShowAsync();
             if (result == ContentDialogResult.Primary)
             {
                 var newTask = new TodoItem { Title = taskBox.Text.Trim() };
                 StartNetworkActivity();
-                await dataTable.InsertAsync(newTask);
-                tasks.Add(newTask);
+                try
+                {
+                    await dataTable.InsertAsync(newTask);
+                    tasks.Add(newTask);
+                }
+                catch (MobileServiceInvalidOperationException exception)
+                {
+                    var opDialog = new MessageDialog(exception.Message);
+                    await opDialog.ShowAsync();
+                }
                 StopNetworkActivity();
             }
 
@@ -113,6 +131,93 @@ namespace Shellmonger.TaskList.Pages
             AddTask.IsTapEnabled = true;
         }
 
+        /// <summary>
+        /// Event Handler: A checkbox on the list was either set or cleared
+        /// </summary>
+        private async void taskComplete_Changed(object sender, RoutedEventArgs e)
+        {
+            CheckBox cb = (CheckBox)sender;
+            TodoItem item = cb.DataContext as TodoItem;
+            item.Completed = (bool)cb.IsChecked;
+
+            StartNetworkActivity();
+            try
+            {
+                await dataTable.UpdateAsync(item);
+            }
+            catch (MobileServiceInvalidOperationException exception)
+            {
+                var dialog = new MessageDialog(exception.Message);
+                await dialog.ShowAsync();
+            }
+            StopNetworkActivity();
+
+            TaskListView.Focus(FocusState.Unfocused);
+        }
+
+        /// <summary>
+        /// Event Handler: The text box has been updated
+        /// </summary>
+        private async void taskTitle_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            TextBox taskTitle = (TextBox)sender;
+            TodoItem item = taskTitle.DataContext as TodoItem;
+
+            // if ESC is pressed, restore the old value
+            if (e.Key == Windows.System.VirtualKey.Escape)
+            {
+                taskTitle.Text = item.Title;
+                TaskListView.Focus(FocusState.Unfocused);
+                return;
+            }
+
+            // if Enter is pressed, store the new value
+            if (e.Key == Windows.System.VirtualKey.Enter)
+            {
+                item.Title = taskTitle.Text;
+                StartNetworkActivity();
+                try
+                {
+                    await dataTable.UpdateAsync(item);
+                    TaskListView.Focus(FocusState.Unfocused);
+                }
+                catch (MobileServiceInvalidOperationException exception)
+                {
+                    var dialog = new MessageDialog(exception.Message);
+                    await dialog.ShowAsync();
+                }
+                StopNetworkActivity();
+                return;
+            }
+        }
+
+
+        /// <summary>
+        /// Event Handler: Delete a record
+        /// </summary>
+        private async void taskDelete_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            SymbolIcon icon = (SymbolIcon)sender;
+            TodoItem item = icon.DataContext as TodoItem;
+
+            StartNetworkActivity();
+            try
+            {
+                await dataTable.DeleteAsync(item);
+                tasks.Remove(item);
+            }
+            catch (MobileServiceInvalidOperationException exception)
+            {
+                var dialog = new MessageDialog(exception.Message);
+                await dialog.ShowAsync();
+            }
+
+            StopNetworkActivity();
+        }
+
+        /// <summary>
+        /// Refresh the Tasks List
+        /// </summary>
         private async Task RefreshTasks()
         {
             StartNetworkActivity();
@@ -128,16 +233,23 @@ namespace Shellmonger.TaskList.Pages
             StopNetworkActivity();
         }
 
+        /// <summary>
+        /// Start rotating the refresh icon
+        /// </summary>
         private void StartNetworkActivity()
         {
             RefreshIconRotation.Begin();
             RefreshIcon.IsTapEnabled = false;
         }
 
+        /// <summary>
+        /// Stop rotating the refresh icon
+        /// </summary>
         private void StopNetworkActivity()
         {
             RefreshIcon.IsTapEnabled = true;
             RefreshIconRotation.Stop();
         }
+
     }
 }
