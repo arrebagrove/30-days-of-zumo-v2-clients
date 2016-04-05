@@ -14,5 +14,8 @@ namespace Shellmonger.TaskList.Services
 
         [JsonProperty("shared")]
         public bool Shared { get; set; }
+
+        [JsonIgnore]
+        public bool NotShared => !Shared;
     }
 }

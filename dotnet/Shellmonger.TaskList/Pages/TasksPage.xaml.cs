@@ -138,7 +138,11 @@ namespace Shellmonger.TaskList.Pages
         {
             CheckBox cb = (CheckBox)sender;
             TodoItem item = cb.DataContext as TodoItem;
-            item.Completed = (bool)cb.IsChecked;
+            bool isChecked = (bool)cb.IsChecked;
+
+            // Short circuit
+            if (item.Completed == (bool)cb.IsChecked) return;
+            if (item.Shared) return;
 
             StartNetworkActivity();
             try

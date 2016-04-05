@@ -77,11 +77,11 @@
                                       VerticalAlignment="Center"
                                       Checked="taskComplete_Changed"
                                       IsChecked="{Binding Completed}"
-                                      IsEnabled="{Binding Shared}"
+                                      IsEnabled="{Binding NotShared}"
                                       Unchecked="taskComplete_Changed" />
                             <TextBox x:Name="taskTitle"
                                      Grid.Column="1"
-                                     IsEnabled="{Binding Shared}"
+                                     IsEnabled="{Binding NotShared}"
                                      KeyDown="taskTitle_KeyDown"
                                      Style="{StaticResource TaskBox}"
                                      Text="{Binding Title}" />
