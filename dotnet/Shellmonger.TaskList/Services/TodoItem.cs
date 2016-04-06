@@ -20,6 +20,6 @@ namespace Shellmonger.TaskList.Services
         public bool Shared { get; set; }
 
         [JsonIgnore]
-        public bool NotShared { get { return !Shared;  } }
+        public bool NotShared => !Shared;
     }
 }
