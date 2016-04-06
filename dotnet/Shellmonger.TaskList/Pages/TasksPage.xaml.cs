@@ -1,4 +1,5 @@
 ﻿using Microsoft.WindowsAzure.MobileServices;
+using Microsoft.WindowsAzure.MobileServices.Sync;
 using Shellmonger.TaskList.Services;
 using System;
 using System.Threading.Tasks;
@@ -22,6 +23,11 @@ namespace Shellmonger.TaskList.Pages
             this.InitializeComponent();
         }
 
+        private void Trace(string msg)
+        {
+            System.Diagnostics.Debug.WriteLine($"TasksPage: {msg}");
+        }
+
         /// <summary>
         /// When the page is brought up, refresh the table.
         /// </summary>
@@ -36,6 +42,7 @@ namespace Shellmonger.TaskList.Pages
         private async void HangUp_Click(object sender, TappedRoutedEventArgs e)
         {
             if (!LogoutIcon.IsTapEnabled) return;
+            Trace("HangUp_Click");
 
             // Change the color of the button to gray and disable it
             var color = LogoutIcon.Foreground;
@@ -49,7 +56,7 @@ namespace Shellmonger.TaskList.Pages
             }
             catch (CloudAuthenticationException exception)
             {
-                System.Diagnostics.Debug.WriteLine("Failed to logout: {0}", exception.InnerException.Message);
+                Trace($"Failed to logout: {exception.InnerException.Message}");
                 var dialog = new MessageDialog(exception.Message);
                 await dialog.ShowAsync();
             }
@@ -64,6 +71,7 @@ namespace Shellmonger.TaskList.Pages
         /// </summary>
         private void People_Click(object sender, TappedRoutedEventArgs e)
         {
+            Trace("People_Click");
             Frame.Navigate(typeof(PeoplePage));
         }
 
@@ -73,6 +81,7 @@ namespace Shellmonger.TaskList.Pages
         private async void RefreshIcon_Click(object sender, RoutedEventArgs e)
         {
             if (!RefreshIcon.IsTapEnabled) return;
+            Trace("RefreshIcon_Click");
             await RefreshTasks();
         }
 
@@ -82,6 +91,7 @@ namespace Shellmonger.TaskList.Pages
         private async void AddTaskIcon_Click(object sender, TappedRoutedEventArgs e)
         {
             if (!AddTask.IsTapEnabled) return;
+            Trace("AddTaskIcon_Click");
 
             // Disable the Add Task Icon
             var color = AddTask.Foreground;
@@ -112,11 +122,13 @@ namespace Shellmonger.TaskList.Pages
             if (result == ContentDialogResult.Primary)
             {
                 var newTask = new TodoItem { Title = taskBox.Text.Trim() };
+                Trace("AddTaskIcon_Click: Adding new task to server");
                 StartNetworkActivity();
                 try
                 {
                     await dataTable.InsertAsync(newTask);
                     tasks.Add(newTask);
+                    Trace($"AddTaskIcon_Click: New Task ID = {newTask.Id}, Title={newTask.Title}");
                 }
                 catch (MobileServiceInvalidOperationException exception)
                 {
@@ -136,17 +148,25 @@ namespace Shellmonger.TaskList.Pages
         /// </summary>
         private async void taskComplete_Changed(object sender, RoutedEventArgs e)
         {
+            Trace("taskComplete_Changed");
             CheckBox cb = (CheckBox)sender;
             TodoItem item = cb.DataContext as TodoItem;
+            if (item.Completed == (bool)cb.IsChecked)
+            {
+                Trace($"taskComplete_Changed: Skipping (same data) ID={item.Id}");
+                return;
+            }
             item.Completed = (bool)cb.IsChecked;
 
             StartNetworkActivity();
             try
             {
+                Trace($"Updating Item ID={item.Id} Title={item.Title} Completed={item.Completed}");
                 await dataTable.UpdateAsync(item);
             }
             catch (MobileServiceInvalidOperationException exception)
             {
+                Trace($"Error updating item ID={item.Id} Error={exception.Message}");
                 var dialog = new MessageDialog(exception.Message);
                 await dialog.ShowAsync();
             }
@@ -158,37 +178,82 @@ namespace Shellmonger.TaskList.Pages
         /// <summary>
         /// Event Handler: The text box has been updated
         /// </summary>
-        private async void taskTitle_KeyDown(object sender, KeyRoutedEventArgs e)
+        private async void taskTitle_Changed(object sender, TextChangedEventArgs e)
         {
             TextBox taskTitle = (TextBox)sender;
             TodoItem item = taskTitle.DataContext as TodoItem;
+            if (item == null) return;
 
-            // if ESC is pressed, restore the old value
-            if (e.Key == Windows.System.VirtualKey.Escape)
+            Trace("taskTitle_Changed");
+            if (item.Title.Equals(taskTitle.Text.Trim()))
             {
-                taskTitle.Text = item.Title;
+                Trace("taskTitle_Changed - text is the same");
+                return;
+            }
+            item.Title = taskTitle.Text.Trim();
+            StartNetworkActivity();
+            try
+            {
+                Trace($"taskTitle_Changed - updating title ID={item.Id} Title={item.Title} Complete={item.Completed}");
+                await dataTable.UpdateAsync(item);
                 TaskListView.Focus(FocusState.Unfocused);
-                return;
             }
-
-            // if Enter is pressed, store the new value
-            if (e.Key == Windows.System.VirtualKey.Enter)
+            catch (MobileServicePreconditionFailedException<TodoItem> conflict)
             {
-                item.Title = taskTitle.Text;
-                StartNetworkActivity();
-                try
+                Trace($"taskTitle_Changed - Conflict Resolution for item ${conflict.Item.Id}");
+
+                // If the two versions are the same, then ignore the conflict - client wins
+                if (conflict.Item.Title.Equals(item.Title) && conflict.Item.Completed == item.Completed)
                 {
-                    await dataTable.UpdateAsync(item);
-                    TaskListView.Focus(FocusState.Unfocused);
+                    item.Version = conflict.Item.Version;
                 }
-                catch (MobileServiceInvalidOperationException exception)
+                else
                 {
-                    var dialog = new MessageDialog(exception.Message);
-                    await dialog.ShowAsync();
+                    // Build the contents of the dialog box
+                    var stackPanel = new StackPanel();
+                    var localVersion = new TextBlock
+                    {
+                        Text = $"Local Version: Title={item.Title} Completed={item.Completed}"
+                    };
+                    var serverVersion = new TextBlock
+                    {
+                        Text = $"Server Version: Title={conflict.Item.Title} Completed={conflict.Item.Completed}"
+                    };
+                    stackPanel.Children.Add(localVersion);
+                    stackPanel.Children.Add(serverVersion);
+
+                    // Create the dialog box
+                    var dialog = new ContentDialog
+                    {
+                        Title = "Resolve Conflict",
+                        PrimaryButtonText = "Local",
+                        SecondaryButtonText = "Server"
+                    };
+                    dialog.Content = stackPanel;
+
+                    // Show the dialog box and handle the response
+                    var result = await dialog.ShowAsync();
+                    if (result == ContentDialogResult.Primary)
+                    {
+                        // Local Version - Copy the version from server to client and re-submit
+                        item.Version = conflict.Item.Version;
+                        await dataTable.UpdateAsync(item);
+                    }
+                    else if (result == ContentDialogResult.Secondary)
+                    {
+                        // Just pull the records from the server
+                        await RefreshTasks();
+                    }
                 }
-                StopNetworkActivity();
-                return;
             }
+            catch (MobileServiceInvalidOperationException exception)
+            {
+                Trace($"taskTitle_Changed - failed to update title ID={item.Id} Title={item.Title} Error={exception.Message}");
+                var dialog = new MessageDialog(exception.Message);
+                await dialog.ShowAsync();
+            }
+            StopNetworkActivity();
+            return;
         }
 
 
@@ -197,17 +262,20 @@ namespace Shellmonger.TaskList.Pages
         /// </summary>
         private async void taskDelete_Tapped(object sender, TappedRoutedEventArgs e)
         {
+            Trace("taskDelete_tapped");
             SymbolIcon icon = (SymbolIcon)sender;
             TodoItem item = icon.DataContext as TodoItem;
 
             StartNetworkActivity();
             try
             {
+                Trace($"Deleting task id={item.Id} title={item.Title} completed={item.Completed}");
                 await dataTable.DeleteAsync(item);
                 tasks.Remove(item);
             }
             catch (MobileServiceInvalidOperationException exception)
             {
+                Trace($"taskDelete_Tapped - failed to delete title ID={item.Id} Error={exception.Message}");
                 var dialog = new MessageDialog(exception.Message);
                 await dialog.ShowAsync();
             }
@@ -223,11 +291,14 @@ namespace Shellmonger.TaskList.Pages
             StartNetworkActivity();
             try
             {
+                Trace("RefreshTasks()");
                 tasks = await dataTable.ToCollectionAsync();
                 TaskListView.ItemsSource = tasks;
+                Trace($"Received {tasks.Count} tasks");
             }
             catch (MobileServiceInvalidOperationException exception)
             {
+                Trace($"Error refreshing tasks: {exception.Message}");
                 await new MessageDialog(exception.Message, "Error Loading Tasks").ShowAsync();
             }
             StopNetworkActivity();

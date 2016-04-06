@@ -11,7 +11,6 @@ namespace Shellmonger.TaskList.Converters
         {
             bool shared = (bool)value;
 
-            System.Diagnostics.Debug.WriteLine(String.Format("shared = {0}", shared));
             if (shared)
                 return new SolidColorBrush(Colors.DarkBlue);
             else

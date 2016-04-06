@@ -76,15 +76,15 @@
                                       Margin="10,5"
                                       VerticalAlignment="Center"
                                       Checked="taskComplete_Changed"
-                                      IsChecked="{Binding Completed}"
-                                      IsEnabled="{Binding Shared}"
+                                      IsChecked="{Binding Completed, Mode=TwoWay}"
+                                      IsEnabled="{Binding NotShared}"
                                       Unchecked="taskComplete_Changed" />
                             <TextBox x:Name="taskTitle"
                                      Grid.Column="1"
-                                     IsEnabled="{Binding Shared}"
-                                     KeyDown="taskTitle_KeyDown"
+                                     IsEnabled="{Binding NotShared}"
+                                     TextChanged="taskTitle_Changed"
                                      Style="{StaticResource TaskBox}"
-                                     Text="{Binding Title}" />
+                                     Text="{Binding Title, Mode=TwoWay}" />
                             <StackPanel Grid.Column="2" Orientation="Horizontal">
                                 <SymbolIcon x:Name="taskShared"
                                             Foreground="{Binding Shared,
